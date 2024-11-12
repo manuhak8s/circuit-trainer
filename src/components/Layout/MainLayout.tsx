@@ -12,7 +12,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors">
       <Header toggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} />
       <main className="pt-16 pb-16 px-4">

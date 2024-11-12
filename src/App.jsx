@@ -4,23 +4,29 @@ import { MainLayout } from './components/Layout/MainLayout';
 import StartScreen from './pages/StartScreen';
 import HomePage from './pages/HomePage';
 import { useState } from 'react';
+import { ThemeProvider } from './theme/ThemeContext';
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   if (!isInitialized) {
-    return <StartScreen onStart={() => setIsInitialized(true)} />;
+    return (
+      <ThemeProvider>
+        <StartScreen onStart={() => setIsInitialized(true)} />
+      </ThemeProvider>
+    );
   }
 
   return (
-    <Router>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          {/* Weitere Routen kommen später hier hin */}
-        </Routes>
-      </MainLayout>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <MainLayout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+          </Routes>
+        </MainLayout>
+      </Router>
+    </ThemeProvider>
   );
 }
 
