@@ -9,10 +9,18 @@ import { ThemeProvider } from './theme/ThemeContext';
 function App() {
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const handleStart = () => {
+    setIsInitialized(true);
+  };
+
+  const handleExit = () => {
+    setIsInitialized(false);
+  };
+
   if (!isInitialized) {
     return (
       <ThemeProvider>
-        <StartScreen onStart={() => setIsInitialized(true)} />
+        <StartScreen onStart={handleStart} />
       </ThemeProvider>
     );
   }
@@ -20,7 +28,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <MainLayout>
+        <MainLayout onExit={handleExit}>
           <Routes>
             <Route path="/" element={<HomePage />} />
           </Routes>

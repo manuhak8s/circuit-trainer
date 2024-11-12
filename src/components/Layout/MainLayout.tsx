@@ -4,7 +4,12 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
 
-export const MainLayout = ({ children }: { children: React.ReactNode }) => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  onExit: () => void;
+}
+
+export const MainLayout = ({ children, onExit }: MainLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -14,7 +19,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors">
       <Header toggleSidebar={toggleSidebar} />
-      <Sidebar isOpen={isSidebarOpen} />
+      <Sidebar isOpen={isSidebarOpen} onExit={onExit} />
       <main className="pt-16 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           {children}
