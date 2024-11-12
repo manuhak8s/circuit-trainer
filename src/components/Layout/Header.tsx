@@ -3,9 +3,15 @@ import React from 'react';
 import { Menu } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
-export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
+export const Header = ({ toggleSidebar }: HeaderProps) => {
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white h-16 fixed top-0 left-0 right-0 flex items-center px-4 justify-between transition-colors">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 
+                    text-gray-900 dark:text-white h-16 fixed top-0 left-0 right-0 
+                    flex items-center px-4 justify-between z-30">
       <div className="flex items-center gap-4">
         <button 
           onClick={toggleSidebar}

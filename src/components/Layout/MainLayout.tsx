@@ -22,18 +22,23 @@ export const MainLayout = ({ children, onExit }: MainLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors">
-      <Header toggleSidebar={toggleSidebar} />
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onExit={onExit} 
-        onClose={closeSidebar}
+      <Header 
+        toggleSidebar={toggleSidebar} 
       />
-      <main className="pt-16 pb-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          {children}
-        </div>
+      
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={closeSidebar}
+        onExit={onExit}
+      />
+      
+      <main className="pt-16 pb-16">
+        {children}
       </main>
+      
       <Footer />
     </div>
   );
 };
+
+export default MainLayout;
