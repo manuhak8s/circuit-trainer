@@ -18,11 +18,9 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
   const [currentTime, setCurrentTime] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
 
-  // Berechne die Timing-Informationen für jede Übung
   const exercisesWithTiming = useMemo(() => {
     let currentStartTime = 0;
     return workout.exercises.flatMap(exercise => {
-      // Multipliziere mit replicas für jede Wiederholung
       const repeatedExercises: ExerciseWithTiming[] = [];
       for (let i = 0; i < exercise.replicas; i++) {
         const startTime = currentStartTime;
@@ -38,38 +36,63 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
     });
   }, [workout]);
 
-  // Finde die aktuelle Übung basierend auf der Zeit
-  const currentExercise = useMemo(() => {
-    return exercisesWithTiming.find(
-      exercise => currentTime >= exercise.startTime && currentTime < exercise.endTime
-    );
-  }, [currentTime, exercisesWithTiming]);
-
   useEffect(() => {
     let intervalId: number;
     if (isRunning) {
       intervalId = window.setInterval(() => {
         setCurrentTime(prev => {
           const nextTime = prev + 1;
-          if (nextTime >= workout.totalDuration) {
+          // Prüfe ob das Workout beendet ist
+          if (nextTime >= exercisesWithTiming[exercisesWithTiming.length - 1].endTime) {
             setIsRunning(false);
-            return prev;
+            return exercisesWithTiming[exercisesWithTiming.length - 1].endTime;
           }
           return nextTime;
         });
       }, 1000);
     }
     return () => clearInterval(intervalId);
-  }, [isRunning, workout.totalDuration]);
+  }, [isRunning, exercisesWithTiming]);
+
+  const currentExercise = useMemo(() => {
+    return exercisesWithTiming.find(
+      exercise => currentTime >= exercise.startTime && currentTime < exercise.endTime
+    ) || exercisesWithTiming[exercisesWithTiming.length - 1]; // Fallback für das Ende
+  }, [currentTime, exercisesWithTiming]);
+
+  const isWorkoutComplete = currentTime >= exercisesWithTiming[exercisesWithTiming.length - 1].endTime;
+
+  if (isWorkoutComplete) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-8 z-50">
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 max-w-2xl w-full shadow-xl">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Workout abgeschlossen!
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              Gut gemacht! Du hast das Workout erfolgreich beendet.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black 
+                       rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 
+                       transition-colors shadow-lg"
+            >
+              Zurück zur Übersicht
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const exerciseTimeLeft = currentExercise.endTime - currentTime;
+  const exerciseProgress = (currentTime - currentExercise.startTime) / currentExercise.duration;
 
   const togglePlayPause = () => {
     setIsRunning(!isRunning);
   };
-
-  if (!currentExercise) return null;
-
-  const exerciseTimeLeft = currentExercise.endTime - currentTime;
-  const exerciseProgress = (currentTime - currentExercise.startTime) / currentExercise.duration;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-8 z-50">
@@ -87,7 +110,7 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
         </div>
 
         <div className="flex flex-col items-center">
-          <div className="mb-24"> {/* Mehr Platz für den Play-Button */}
+          <div className="mb-24">
             <Timer 
               progress={exerciseProgress}
               exerciseName={currentExercise.name}
