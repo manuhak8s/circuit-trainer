@@ -12,6 +12,7 @@ interface WorkoutExecutionDialogProps {
 interface ExerciseWithTiming extends Exercise {
   startTime: number;
   endTime: number;
+  isRest?: boolean;
 }
 
 export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ workout, onClose }) => {
@@ -20,20 +21,48 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
 
   const exercisesWithTiming = useMemo(() => {
     let currentStartTime = 0;
-    return workout.exercises.flatMap(exercise => {
-      const repeatedExercises: ExerciseWithTiming[] = [];
+    const allExercises: ExerciseWithTiming[] = [];
+
+    workout.exercises.forEach((exercise, index) => {
+      // Füge die Übungswiederholungen hinzu
       for (let i = 0; i < exercise.replicas; i++) {
         const startTime = currentStartTime;
         const endTime = startTime + exercise.duration;
-        repeatedExercises.push({
+        allExercises.push({
           ...exercise,
           startTime,
           endTime
         });
         currentStartTime = endTime;
+
+        // Füge Pause hinzu, wenn es nicht die letzte Wiederholung ist oder wenn es eine nächste Übung gibt
+        const isLastRepetition = i === exercise.replicas - 1;
+        const isLastExercise = index === workout.exercises.length - 1;
+        
+        if (!isLastExercise || !isLastRepetition) {
+          const restDuration = workout.useGlobalRest 
+            ? workout.globalRestDuration! 
+            : exercise.restAfter || 0;
+
+          if (restDuration > 0) {
+            const restStartTime = currentStartTime;
+            const restEndTime = restStartTime + restDuration;
+            allExercises.push({
+              id: `rest-${exercise.id}-${i}`,
+              name: 'Pause',
+              duration: restDuration,
+              replicas: 1,
+              startTime: restStartTime,
+              endTime: restEndTime,
+              isRest: true
+            });
+            currentStartTime = restEndTime;
+          }
+        }
       }
-      return repeatedExercises;
     });
+
+    return allExercises;
   }, [workout]);
 
   useEffect(() => {
@@ -42,7 +71,6 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
       intervalId = window.setInterval(() => {
         setCurrentTime(prev => {
           const nextTime = prev + 1;
-          // Prüfe ob das Workout beendet ist
           if (nextTime >= exercisesWithTiming[exercisesWithTiming.length - 1].endTime) {
             setIsRunning(false);
             return exercisesWithTiming[exercisesWithTiming.length - 1].endTime;
@@ -57,7 +85,7 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
   const currentExercise = useMemo(() => {
     return exercisesWithTiming.find(
       exercise => currentTime >= exercise.startTime && currentTime < exercise.endTime
-    ) || exercisesWithTiming[exercisesWithTiming.length - 1]; // Fallback für das Ende
+    ) || exercisesWithTiming[exercisesWithTiming.length - 1];
   }, [currentTime, exercisesWithTiming]);
 
   const isWorkoutComplete = currentTime >= exercisesWithTiming[exercisesWithTiming.length - 1].endTime;
@@ -94,6 +122,9 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
     setIsRunning(!isRunning);
   };
 
+  // Finde die nächste Übung
+  const nextExercise = exercisesWithTiming[exercisesWithTiming.indexOf(currentExercise) + 1];
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-8 z-50">
       <div className="bg-white dark:bg-gray-900 rounded-xl p-8 max-w-2xl w-full shadow-xl">
@@ -117,15 +148,13 @@ export const WorkoutExecutionDialog: React.FC<WorkoutExecutionDialogProps> = ({ 
               timeLeft={exerciseTimeLeft}
               isRunning={isRunning}
               onTogglePlayPause={togglePlayPause}
+              isRest={currentExercise.isRest}
             />
           </div>
 
           <div className="w-full mt-8 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
             <p className="text-base text-gray-600 dark:text-gray-400 text-center">
-              Nächste Übung: {
-                exercisesWithTiming[exercisesWithTiming.indexOf(currentExercise) + 1]?.name || 
-                'Workout beendet'
-              }
+              Nächste Übung: {nextExercise?.name || 'Workout beendet'}
             </p>
           </div>
         </div>

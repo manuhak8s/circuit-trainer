@@ -33,6 +33,13 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onDelete, onStart })
     return `${minutes} min`;
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Möchtest du dieses Workout wirklich löschen?')) {
+      onDelete(workout.id);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 flex flex-col">
       {/* Card Header */}
@@ -53,7 +60,7 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onDelete, onStart })
       {/* Exercises List */}
       <div className="px-6 py-4 flex-grow">
         <div className="space-y-3">
-          {workout.exercises.map((exercise) => (
+          {workout.exercises.map((exercise, index) => (
             <div 
               key={exercise.id}
               className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -69,7 +76,15 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onDelete, onStart })
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <span>{exercise.duration}s</span>
                     <span>•</span>
-                    <span>{exercise.replicas} Wiederholungen</span>
+                    <span>{exercise.replicas}× </span>
+                    {((workout?.useGlobalRest ? workout.globalRestDuration || 0 : exercise.restAfter || 0) > 0) && (
+                      <>
+                        <span>•</span>
+                        <span>
+                          {workout.useGlobalRest ? workout.globalRestDuration : exercise.restAfter}s Pause
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -92,7 +107,7 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onDelete, onStart })
             Workout starten
           </button>
           <button
-            onClick={() => onDelete(workout.id)}
+            onClick={handleDeleteClick}
             className="flex items-center justify-center p-2.5 
                      text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400
                      hover:bg-red-50 dark:hover:bg-red-500/10

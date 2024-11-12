@@ -12,21 +12,25 @@ interface ExerciseInput {
   name: string;
   duration: string;
   replicas: string;
+  restAfter: string;
 }
 
 export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ onSave }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState<ExerciseInput[]>([
-    { id: '1', name: '', duration: '', replicas: '1' }
+    { id: '1', name: '', duration: '', replicas: '1', restAfter: '0' }
   ]);
+  const [useGlobalRest, setUseGlobalRest] = useState(false);
+  const [globalRestDuration, setGlobalRestDuration] = useState('30');
 
   const handleAddExercise = () => {
     setExercises([...exercises, {
       id: (exercises.length + 1).toString(),
       name: '',
       duration: '',
-      replicas: '1'
+      replicas: '1',
+      restAfter: '0'
     }]);
   };
 
@@ -51,19 +55,26 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
         id: ex.id,
         name: ex.name,
         duration: parseInt(ex.duration, 10),
-        replicas: parseInt(ex.replicas, 10)
+        replicas: parseInt(ex.replicas, 10),
+        restAfter: useGlobalRest ? undefined : parseInt(ex.restAfter, 10)
       }));
 
-    const totalDuration = validExercises.reduce((sum, ex) => 
-      sum + (ex.duration * ex.replicas), 0
-    );
+    const totalDuration = validExercises.reduce((sum, ex) => {
+      const exerciseDuration = ex.duration * ex.replicas;
+      const restDuration = useGlobalRest 
+        ? parseInt(globalRestDuration, 10) 
+        : (ex.restAfter || 0);
+      return sum + exerciseDuration + restDuration;
+    }, 0);
 
     const newWorkout: Workout = {
       id: Date.now().toString(),
       name: workoutName,
       exercises: validExercises,
       totalDuration,
-      createdAt: new Date()
+      createdAt: new Date(),
+      useGlobalRest,
+      globalRestDuration: useGlobalRest ? parseInt(globalRestDuration, 10) : undefined
     };
 
     onSave(newWorkout);
@@ -73,14 +84,16 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
 
   const resetForm = () => {
     setWorkoutName('');
-    setExercises([{ id: '1', name: '', duration: '', replicas: '1' }]);
+    setExercises([{ id: '1', name: '', duration: '', replicas: '1', restAfter: '0' }]);
+    setUseGlobalRest(false);
+    setGlobalRestDuration('30');
   };
 
   if (!isOpen) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-gray-900 dark:bg-white text-white dark:text-gray-900 
+        className="fixed bottom-20 right-4 w-14 h-14 bg-black dark:bg-white text-white dark:text-black 
                   rounded-full shadow-lg flex items-center justify-center 
                   hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
       >
@@ -90,9 +103,9 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Neues Workout erstellen
           </h2>
@@ -121,12 +134,44 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
             />
           </div>
 
+          {/* Global Rest Option */}
+          <div className="space-y-2 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="useGlobalRest"
+                checked={useGlobalRest}
+                onChange={(e) => setUseGlobalRest(e.target.checked)}
+                className="rounded border-gray-300 dark:border-gray-700"
+              />
+              <label htmlFor="useGlobalRest" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Einheitliche Pause zwischen Übungen
+              </label>
+            </div>
+            
+            {useGlobalRest && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="number"
+                  value={globalRestDuration}
+                  onChange={(e) => setGlobalRestDuration(e.target.value)}
+                  min="0"
+                  className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md
+                           text-gray-900 dark:text-white bg-white dark:bg-gray-800"
+                  placeholder="Sek."
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Sekunden Pause</span>
+              </div>
+            )}
+          </div>
+
+          {/* Exercises List */}
           <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Übungen
             </label>
-            {exercises.map((exercise) => (
-              <div key={exercise.id} className="space-y-2">
+            {exercises.map((exercise, index) => (
+              <div key={exercise.id} className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -134,9 +179,8 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
                     value={exercise.name}
                     onChange={(e) => handleExerciseChange(exercise.id, 'name', e.target.value)}
                     required
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                             text-gray-900 dark:text-white bg-white dark:bg-gray-800
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md
+                             text-gray-900 dark:text-white bg-white dark:bg-gray-800"
                   />
                   {exercises.length > 1 && (
                     <button
@@ -148,30 +192,48 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
                     </button>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Sek."
-                    value={exercise.duration}
-                    onChange={(e) => handleExerciseChange(exercise.id, 'duration', e.target.value)}
-                    required
-                    min="1"
-                    className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                             text-gray-900 dark:text-white bg-white dark:bg-gray-800
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Wdh."
-                    value={exercise.replicas}
-                    onChange={(e) => handleExerciseChange(exercise.id, 'replicas', e.target.value)}
-                    required
-                    min="1"
-                    className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                             text-gray-900 dark:text-white bg-white dark:bg-gray-800
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Dauer (s)"
+                      value={exercise.duration}
+                      onChange={(e) => handleExerciseChange(exercise.id, 'duration', e.target.value)}
+                      min="1"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md
+                               text-gray-900 dark:text-white bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Wiederholungen"
+                      value={exercise.replicas}
+                      onChange={(e) => handleExerciseChange(exercise.id, 'replicas', e.target.value)}
+                      min="1"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md
+                               text-gray-900 dark:text-white bg-white dark:bg-gray-800"
+                    />
+                  </div>
                 </div>
+
+                {!useGlobalRest && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Pause (s)"
+                      value={exercise.restAfter}
+                      onChange={(e) => handleExerciseChange(exercise.id, 'restAfter', e.target.value)}
+                      min="0"
+                      className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md
+                               text-gray-900 dark:text-white bg-white dark:bg-gray-800"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Pause danach</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -185,7 +247,7 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
             Übung hinzufügen
           </button>
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
@@ -195,7 +257,7 @@ export const WorkoutCreationDialog: React.FC<WorkoutCreationDialogProps> = ({ on
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg 
+              className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg 
                        hover:bg-gray-800 dark:hover:bg-gray-100 flex items-center gap-2"
             >
               <Save size={16} />

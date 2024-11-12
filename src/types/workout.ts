@@ -4,6 +4,7 @@ export interface Exercise {
     name: string;
     duration: number;
     replicas: number;
+    restAfter?: number; // Optional pause after this exercise
   }
   
   export interface Workout {
@@ -12,4 +13,6 @@ export interface Exercise {
     exercises: Exercise[];
     totalDuration: number;
     createdAt: Date;
+    useGlobalRest: boolean;
+    globalRestDuration?: number;
   }

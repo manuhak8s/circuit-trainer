@@ -8,6 +8,7 @@ interface TimerProps {
   timeLeft: number;
   isRunning: boolean;
   onTogglePlayPause: () => void;
+  isRest?: boolean;
 }
 
 export const Timer: React.FC<TimerProps> = ({ 
@@ -15,7 +16,8 @@ export const Timer: React.FC<TimerProps> = ({
   exerciseName, 
   timeLeft,
   isRunning,
-  onTogglePlayPause
+  onTogglePlayPause,
+  isRest
 }) => {
   const radius = 140;
   const circumference = 2 * Math.PI * radius;
@@ -25,6 +27,13 @@ export const Timer: React.FC<TimerProps> = ({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getProgressColor = () => {
+    if (isRest) {
+      return 'text-blue-500 dark:text-blue-400';
+    }
+    return 'text-green-500 dark:text-green-400';
   };
 
   return (
@@ -38,7 +47,7 @@ export const Timer: React.FC<TimerProps> = ({
           fill="none"
           stroke="currentColor"
           strokeWidth="12"
-          className="text-red-200 dark:text-red-900"
+          className={`${isRest ? 'text-blue-200 dark:text-blue-900' : 'text-red-200 dark:text-red-900'}`}
         />
         
         {/* Fortschrittskreis */}
@@ -52,7 +61,7 @@ export const Timer: React.FC<TimerProps> = ({
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           transform="rotate(-90 200 200)"
-          className="text-green-500 dark:text-green-400 transition-all duration-1000"
+          className={`${getProgressColor()} transition-all duration-1000`}
         />
         
         {/* Übungsname in der Mitte */}
@@ -76,7 +85,6 @@ export const Timer: React.FC<TimerProps> = ({
         </text>
       </svg>
 
-      {/* Play/Pause Button */}
       <button
         onClick={onTogglePlayPause}
         className="absolute left-1/2 transform -translate-x-1/2 -bottom-16
