@@ -1,14 +1,23 @@
 // src/components/Layout/Sidebar.tsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Home, Timer, Settings, LogOut } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onExit: () => void;
+  onClose: () => void;  // Neue Prop für das Schließen
 }
 
-export const Sidebar = ({ isOpen, onExit }: SidebarProps) => {
+export const Sidebar = ({ isOpen, onExit, onClose }: SidebarProps) => {
+  const navigate = useNavigate();
+
+  // Kombinierte Funktion für Navigation und Schließen
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    onClose();
+  };
+
   return (
     <aside className={`
       fixed left-0 top-16 bottom-16 
@@ -23,27 +32,35 @@ export const Sidebar = ({ isOpen, onExit }: SidebarProps) => {
       <nav className="p-4 flex-1">
         <ul className="space-y-2">
           <li>
-            <Link to="/" className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <button 
+              onClick={() => handleNavigation('/')}
+              className="flex items-center gap-2 p-2 w-full rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+            >
               <Home size={20} />
               Home
-            </Link>
+            </button>
           </li>
           <li>
-            <Link to="/workout" className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <button 
+              onClick={() => handleNavigation('/workout')}
+              className="flex items-center gap-2 p-2 w-full rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+            >
               <Timer size={20} />
               Workout
-            </Link>
+            </button>
           </li>
           <li>
-            <Link to="/settings" className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <button 
+              onClick={() => handleNavigation('/settings')}
+              className="flex items-center gap-2 p-2 w-full rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+            >
               <Settings size={20} />
               Einstellungen
-            </Link>
+            </button>
           </li>
         </ul>
       </nav>
       
-      {/* Exit Button am unteren Ende */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-800">
         <button 
           onClick={onExit}
