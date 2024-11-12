@@ -1,6 +1,7 @@
 // src/pages/WorkoutPage.tsx
 import React, { useEffect, useState } from 'react';
 import { WorkoutCreationDialog } from '../components/WorkoutCreationDialog';
+import { WorkoutExecutionDialog } from '../components/WorkoutExecution/WorkoutExecutionDialog';
 import { Workout } from '../types/workout';
 import { Play, Trash2, Clock, RefreshCw } from 'lucide-react';
 
@@ -108,6 +109,7 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onDelete, onStart })
 
 const WorkoutPage: React.FC = () => {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
 
   useEffect(() => {
     setWorkouts(loadWorkouts());
@@ -126,12 +128,11 @@ const WorkoutPage: React.FC = () => {
   };
 
   const handleStartWorkout = (workout: Workout) => {
-    // TODO: Implementiere die Workout-Start-Logik
-    console.log('Starting workout:', workout.name);
+    setActiveWorkout(workout);
   };
 
   return (
-    <div className="p-4 min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="p-4">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
         Meine Workouts
       </h1>
@@ -158,6 +159,13 @@ const WorkoutPage: React.FC = () => {
       )}
 
       <WorkoutCreationDialog onSave={handleSaveWorkout} />
+
+      {activeWorkout && (
+        <WorkoutExecutionDialog
+          workout={activeWorkout}
+          onClose={() => setActiveWorkout(null)}
+        />
+      )}
     </div>
   );
 };

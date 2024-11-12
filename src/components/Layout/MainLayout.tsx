@@ -21,7 +21,7 @@ export const MainLayout = ({ children, onExit }: MainLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Header 
         toggleSidebar={toggleSidebar} 
       />
@@ -33,7 +33,9 @@ export const MainLayout = ({ children, onExit }: MainLayoutProps) => {
       />
       
       <main className="pt-16 pb-16">
-        {children}
+        <div className="container mx-auto px-6">
+          {children}
+        </div>
       </main>
       
       <Footer />
